@@ -29,8 +29,13 @@ sched.start()
 def home():
     if (request.method == 'GET'):
         data = "hello world"
-@@ -28,4 +41,4 @@ def disp(num):
+        return jsonify({'data': data})
+    if (request.method == 'POST'):
+        data = request.get_json()
+        return data
+@app.route('/home/<int:num>', methods=['GET'])
+def disp(num):
+    return jsonify({'data': num ** 2})
 # driver function
 if __name__ == '__main__':
-    app.run(debug=True) 
- 
+    app.run(debug=True)
