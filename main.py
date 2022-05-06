@@ -1,44 +1,82 @@
-# Using flask to make an api
-# import necessary libraries and functions
-from flask import Flask, jsonify, request
-from apscheduler.schedulers.background import BackgroundScheduler# creating a Flask app
-#app = Flask(__name__)
-import RPi.GPIO as GPIO
+from multiprocessing import Process
 import time
-LED_PIN = 20
-GPIO.setmode(GPIO.BCM)
-GPIO.setup(LED_PIN, GPIO.OUT)
-print("prender")
-GPIO.output(LED_PIN, GPIO.HIGH)
-time.sleep(2)
-GPIO.output(LED_PIN, GPIO.LOW)
-def sensor():
-    """ Function for test purposes. """
-    GPIO.setup(LED_PIN, GPIO.OUT)
-    print("prender")
-    GPIO.output(LED_PIN, GPIO.HIGH)
-    time.sleep(3)
-    print("apagar")
-    GPIO.output(LED_PIN, GPIO.LOW)
-    print("Scheduler is alive!")
+import config
+from telegram.ext import (Updater, CommandHandler)
+from binance import Client, ThreadedWebsocketManager, ThreadedDepthCacheManager
+import pandas as pd
+from datetime import datetime
 
-sched = BackgroundScheduler(daemon=True)
-sched.add_job(sensor,'interval',seconds=5)
-sched.start()
-"""@app.route('/login', methods=['GET', 'POST'])
-def home():
-    if (request.method == 'GET'):
-        data = "hello world"
-        return jsonify({'data': data})
-    if (request.method == 'POST'):
-        data = request.get_json()
-        return data
+def mesActual(update, context):
+    client = Client(config.API_KEY, config.API_SECRET)
+    total = 0
+    dphistory = client.get_deposit_history(coin="ETH")
+    df = pd.DataFrame(dphistory,
+                      columns=['amount', 'coin', 'network', 'status', 'address', 'addressTag', 'txId', 'insertTime',
+                               'transferType', 'unlockConfirm'])
+    df.insertTime = df.insertTime.apply(lambda x: pd.to_datetime(x, utc=True, unit='ms'))
+    for index, row in df.iterrows():
+        amount = row["amount"]
+        fecha = row["insertTime"]
+        coin = row["coin"]
+        address = row["address"]
+        if fecha.month == (datetime.now().month )  and coin=='ETH':
+            total += float(amount)
 
-@app.route('/home/<int:num>', methods=['GET'])
-def disp(num):
-    return jsonify({'data': num ** 2})
+    mensaje = "En el mes " + str(datetime.now().month) + " vamos acumulando un total de: " + str(total) + " ETH"
+    context.bot.send_message(update.message.chat_id, mensaje)
+def zil(update, context):
+    client = Client(config.API_KEY, config.API_SECRET)
+    total = 0
+    dphistory = client.get_deposit_history(coin="ZIL")
+    df = pd.DataFrame(dphistory,
+                      columns=['amount', 'coin', 'network', 'status', 'address', 'addressTag', 'txId', 'insertTime',
+                               'transferType', 'unlockConfirm'])
+    df.insertTime = df.insertTime.apply(lambda x: pd.to_datetime(x, utc=True, unit='ms'))
+    for index, row in df.iterrows():
+        amount = row["amount"]
+        fecha = row["insertTime"]
+        coin = row["coin"]
+        address = row["address"]
+        if coin=='ZIL':
+            total += float(amount)
 
+    mensaje = " vamos acumulando un total de: " + str(total) + " ZIL"
+    context.bot.send_message(update.message.chat_id, mensaje)
 
-# driver function
-if __name__ == '__main__':
-    app.run(debug=True)"""
+def mesAnterior(update, context):
+    client = Client(config.API_KEY, config.API_SECRET)
+    total = 0
+    dphistory = client.get_deposit_history(coin="ETH")
+    df = pd.DataFrame(dphistory,
+                      columns=['amount', 'coin', 'network', 'status', 'address', 'addressTag', 'txId', 'insertTime',
+                               'transferType', 'unlockConfirm'])
+    df.insertTime = df.insertTime.apply(lambda x: pd.to_datetime(x, utc=True, unit='ms'))
+    for index, row in df.iterrows():
+        amount = row["amount"]
+        fecha = row["insertTime"]
+        coin = row["coin"]
+        address = row["address"]
+        if fecha.month == (datetime.now().month - 1)  and coin == 'ETH':
+            total += float(amount)
+    mensaje= "En el mes "+str(datetime.now().month-1)+ " acumulamos un total de: " + str(total) + " ETH"
+    context.bot.send_message(update.message.chat_id, mensaje)
+def help(update, context):
+    context.bot.send_message(update.message.chat_id, "Lista de comandos \n /mesActual - Total ETH en el mes \n /mesAnterior - Total ETH en el mes anterior")
+def tgbot():
+    TOKEN = config.TGTOKEN
+    updater = Updater(TOKEN, use_context=True)
+    dp = updater.dispatcher
+
+    # Eventos que activarán nuestro bot.
+    dp.add_handler(CommandHandler('mesActual', mesActual))
+    dp.add_handler(CommandHandler('mesAnterior', mesAnterior))
+    dp.add_handler(CommandHandler('zil', zil))
+    dp.add_handler(CommandHandler('help', help))
+    # Comienza el bot
+    updater.start_polling()
+    # Lo deja a la escucha. Evita que se detenga.
+    updater.idle()
+
+if __name__=='__main__':
+    p1 = Process(target = tgbot())
+    p1.start()
