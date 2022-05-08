@@ -1,16 +1,10 @@
-# Using flask to make an api
-# import necessary libraries and functions
 from flask import Flask, jsonify, request
-from apscheduler.schedulers.background import BackgroundScheduler# creating a Flask app
+from apscheduler.schedulers.background import BackgroundScheduler
 app = Flask(__name__)
-#import RPi.GPIO as GPIO
+import RPi.GPIO as GPIO
 import time
 import os
 import sqlite3 as sql
-
-
-
-
 
 def createDB():
     con = sql.connect("dbRigs.db")
@@ -65,9 +59,9 @@ def ping(num):
         return True
 
 def enviarPulsoDe(segs,rignum):
-    #GPIO.output(pins[rignum], GPIO.HIGH)
+    GPIO.output(pins[rignum], GPIO.HIGH)
     time.sleep(segs)
-    #GPIO.output(pins[rignum], GPIO.LOW)
+    GPIO.output(pins[rignum], GPIO.LOW)
 
 def checkSensors():
     for i in range(len(hostnames)):
@@ -90,27 +84,6 @@ if os.path.isfile(db) == False:
 sched = BackgroundScheduler(daemon=True)
 sched.add_job(checkSensors(),'interval',seconds=300)
 sched.start()
-"""
-LED_PIN = 20
-GPIO.setmode(GPIO.BCM)
-GPIO.setup(LED_PIN, GPIO.OUT)
-print("prender")
-GPIO.output(LED_PIN, GPIO.HIGH)
-time.sleep(2)
-GPIO.output(LED_PIN, GPIO.LOW)
-def sensor():
-    GPIO.setup(LED_PIN, GPIO.OUT)
-    print("prender")
-    GPIO.output(LED_PIN, GPIO.HIGH)
-    time.sleep(3)
-    print("apagar")
-    GPIO.output(LED_PIN, GPIO.LOW)
-    print("Scheduler is alive!")
-
-sched = BackgroundScheduler(daemon=True)
-sched.add_job(sensor,'interval',seconds=5)
-sched.start()
-"""
 @app.route('/turnon/<int:num>', methods=['GET'])
 def turnon(num):
     if (request.method == 'GET'):
@@ -142,6 +115,6 @@ def reset(num):
 
 def disp(num):
     return jsonify({'data': num ** 2})
-# driver function
+
 if __name__ == '__main__':
     app.run(debug=True)
