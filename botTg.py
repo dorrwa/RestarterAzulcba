@@ -33,6 +33,26 @@ def turnon(update,context):
         context.bot.send_message(update.message.chat_id, mensaje)
     except:
         context.bot.send_message(update.message.chat_id, "Ingrese un valor")
+
+def turnoff(update,context):
+    try:
+        print(context.args[0])
+        mensaje = str(context.args[0])
+        response = requests.get("http://127.0.0.1:5000/turnoff/"+str(context.args[0]))
+        print(response)
+        context.bot.send_message(update.message.chat_id, mensaje)
+    except:
+        context.bot.send_message(update.message.chat_id, "Ingrese un valor")
+
+def reset(update,context):
+    try:
+        print(context.args[0])
+        mensaje = str(context.args[0])
+        response = requests.get("http://127.0.0.1:5000/reset/"+str(context.args[0]))
+        print(response)
+        context.bot.send_message(update.message.chat_id, mensaje)
+    except:
+        context.bot.send_message(update.message.chat_id, "Ingrese un valor")
 def help(update, context):
     context.bot.send_message(update.message.chat_id, "Lista de comandos \n /turnon + numero - prender rig numero x \n /turnoff + numero - apagar rig numero x \n /restart numero - restartea el rig")
 def tgbot():
@@ -43,6 +63,8 @@ def tgbot():
     # Eventos que activarán nuestro bot.
     #dp.add_handler(CommandHandler('mesAnterior', mesAnterior))
     dp.add_handler(CommandHandler('turnon', turnon))
+    dp.add_handler(CommandHandler('turnoff', turnoff))
+    dp.add_handler(CommandHandler('reset', reset))
     dp.add_handler(CommandHandler('help', help))
     # Comienza el bot
     updater.start_polling()
