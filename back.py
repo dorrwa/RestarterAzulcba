@@ -5,6 +5,7 @@ import RPi.GPIO as GPIO
 import time
 import os
 import sqlite3 as sql
+import config
 
 def createDB():
     con = sql.connect("dbRigs.db")
@@ -17,7 +18,7 @@ def createTable():
     cursor.execute(
         """CREATE TABLE rigs(
             id integer,
-            activo integer
+            estado integer
         )"""
     )
     con.commit()
@@ -59,30 +60,35 @@ def ping(num):
         return True
 
 def enviarPulsoDe(segs,rignum):
-    GPIO.output(pins[rignum], GPIO.HIGH)
+    GPIO.output(pins[rignum], 0)
     time.sleep(segs)
-    GPIO.output(pins[rignum], GPIO.LOW)
+    GPIO.output(pins[rignum], 1)
 
 def checkSensors():
     for i in range(len(hostnames)):
         d = checkFieldStatus(i)
         if ping(i) and d[0][1] == 1:
             enviarPulsoDe(5,i)
+            time.sleep(3)
+            enviarPulsoDe(2,i)
 
 
 #completar los hostnames con las ips
-hostnames = ["google.com","192.168.0.1"]
+hostnames = config.HOSTNAMES
 #completar los PINS con los GPIO acordes a cada hostname
-pins=[20,30]
+pins=config.PINS
 db= "dbRigs.db"
-
+GPIO.setmode(GPIO.BOARD)
+for pin in pins:
+    GPIO.setup(pin, GPIO.OUT, initial = 1)
+    
 if os.path.isfile(db) == False:
     createDB()
     createTable()
     hostnamesSetup()
 
 sched = BackgroundScheduler(daemon=True)
-sched.add_job(checkSensors(),'interval',seconds=300)
+sched.add_job(checkSensors,'interval',seconds=300)
 sched.start()
 @app.route('/turnon/<int:num>', methods=['GET'])
 def turnon(num):

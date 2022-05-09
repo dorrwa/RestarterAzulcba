@@ -33,13 +33,13 @@ def reset(update,context):
     except:
         context.bot.send_message(update.message.chat_id, "Ingrese un valor")
 def help(update, context):
-    context.bot.send_message(update.message.chat_id, "Lista de comandos \n /turnon + numero - prender rig numero x \n /turnoff + numero - apagar rig numero x \n /restart numero - restartea el rig")
+    context.bot.send_message(update.message.chat_id, "Lista de comandos \n /turnon + numero - prender rig numero x \n /turnoff + numero - apagar rig numero x \n /reset numero - restartea el rig")
 def tgbot():
     TOKEN = config.TGTOKEN
     updater = Updater(TOKEN, use_context=True)
     dp = updater.dispatcher
 
-    # Eventos que activarán nuestro bot.
+    # Eventos que activaran nuestro bot.
     dp.add_handler(CommandHandler('turnon', turnon))
     dp.add_handler(CommandHandler('turnoff', turnoff))
     dp.add_handler(CommandHandler('reset', reset))
@@ -50,5 +50,6 @@ def tgbot():
     updater.idle()
 
 if __name__=='__main__':
+    print("inicio")
     p1 = Process(target = tgbot())
     p1.start()
