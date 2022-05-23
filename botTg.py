@@ -50,6 +50,5 @@ def tgbot():
     updater.idle()
 
 if __name__=='__main__':
-    print("inicio")
     p1 = Process(target = tgbot())
     p1.start()
